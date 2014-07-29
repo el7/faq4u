@@ -1,0 +1,70 @@
+\documentclass[letterpaper,10pt,titlepage,fleqn]{article}
+
+\setlength{\mathindent}{1cm}
+
+\usepackage{graphicx}
+
+\usepackage{listings}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+\usepackage{alltt}
+\usepackage{float}
+\usepackage{color}
+
+\usepackage{url}
+
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+
+\usepackage{pstricks, pst-node}
+
+\usepackage{geometry}
+\geometry{textheight=9in, textwidth=6.5in}
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{hyperref}
+
+\usepackage{textcomp}
+\usepackage{listings}
+
+\def\name{Cezary Wojcik, David Graffeo, Kevin Bergman}
+
+\hypersetup{
+  colorlinks = true,
+  urlcolor = black,
+  pdfauthor = {\name},
+  pdfkeywords = {cs411 ``operating systems ii''},
+  pdftitle = {CS 411 Project 2},
+  pdfsubject = {CS 411 Project 2},
+  pdfpagemode = UseNone
+}
+
+\parindent = 0.0 in
+\parskip = 0.2 in
+
+\title{Project 2 Group 31 Writeup}
+\author{Cezary Wojcik, David Graffeo, Kevin Bergman}
+
+\begin{document}
+
+\maketitle
+
+Firstly, in order to insert our sstf-iosched.c file into the kernel, we had to modify the Makefile and the Kconfig.iosched file. This was a fairly simple process of copying what was already there and pasting it with parts replaced to match our sstf scheduler.
+
+We started with the noop-sched.c file as a guide. Firstly, we renamed everything to match sstf instead of noop. However, we only had to change two of the elevator functions - the add request and the dispatch functions. We also added more items to the data struct to help us with the implementation. Firstly, we added a struct list\_head *next pointer. This is a way to save what element in the list we will go to next. Secondly, we added an int count. This was mainly for diagnostic purposes so that we can print how many elements are in the queue. It is not actually necessary for the implementation (though it makes some parts of the code cleaner). Finally, we added a char direction in order to keep track of the direction in which the elevator has been heading. The direction can be one of three possibilities - none, up, or down.
+
+The first of two major functions that we modified corresponded to the elevator\_add\_req\_fn - we named it sstf\_add\_req. The purpose of this function is fairly simple - we need it to add requests to the queue such that they are sorted according to sector number. We used an insertion sort to do this. There are three possible cases that we handle. Firstly, the queue could be empty, in which case we don't need to worry about any kind of sorting since we can just add the request to the queue. Next, we check to see if the value fits in between any two elements in the queue (which is already sorted). If so, we can insert the new value in between these two elements in the queue. Finally, if the new value didn't fit in between any of the existing values, we add the new value to the end of the queue. Since the linked list is circular, this covers both the case in which the new value is smaller than anything that is already in the queue and the case in which the new value is bigger than anything that is already in the queue.
+
+The second of two major functions that we modified corresponded to the elevator\_dispatch\_fn - we named it sstf\_dispatch. First, we check if the queue is empty. If it is, we don't have anything to dispatch, so we can just return 0. Next, we check if the number of items in the queue is greater than one. If there is only one element in the queue, we can just dispatch it - we don't have to figure out what to dispatch next since there is nothing else in the queue. The brunt of the action happens if there is more than one element in the queue. If so, we have to decide what element in the queue we're going to dispatch next. This is made significantly easier by the fact that the queue is already sorted according to sector thanks to our add function.
+
+Now, we have to consider one of three possibilities. The first of these is that the elevator was not previously moving. In this case, we want to go to the nearest sector. This is the SSTF portion of the algorithm. Since the queue is sorted, we only need to check the two requests adjacent to the current request since the nearest sector will be one of these. We check the distance to both the previous and the next sectors and decide which sector is next based on which distance is smaller.
+
+Secondly, we have the possibility that the elevator was going up. If this is the case, then we want to continue going up if possible. Note that up corresponds to next and down corresponds to previous. First, we check to make sure that the next sector is bigger than the current sector. If not, it means that the next pointer is wrapping around back to the beginning of the queue, and so we need to switch directions. If the next sector is, in fact, bigger, then we can just continue going up. Once we reach the last element in the queue, we also need to remember to set the next direction to no direction. This way the process will start over once new requests are added to the queue, and the elevator will once again decide where to go based on what is closer.
+
+\end{document}
