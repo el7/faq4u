@@ -1,1 +1,19 @@
 Readme file.
+
+Files:
+	makefile		// turns the .tex into a .pdf
+	faq4u.tex		// LaTeX file for the FAQ document
+	README			// readme file
+	README.md		// readme file in markdown
+
+Instructions:
+	'make' in terminal to build the .pdf document and also clean.
+	'make faq4u' just builds the document, no cleaning.
+	'make clean' to delete unnessesary files after the document is made.
+	'make clean_all', like above but deletes .pdf document also.
+	'make tar' puts source files into a tar ball.
+
+
+
+
+
