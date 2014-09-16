@@ -6,6 +6,7 @@ SRC =  faq4u.tex
 SRC += README
 SRC += README.md
 SRC += makefile
+SRC += putty1.png putty2.png
 
 
 default: all
